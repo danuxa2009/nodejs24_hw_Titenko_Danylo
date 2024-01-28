@@ -1,0 +1,21 @@
+{
+  "name": "nodejs24_hw_titenko_danylo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "node ./main.js",
+    "dev": "nodemon ./main.js",
+    "debug": "node --inspect-brk ./main.js"
+  },
+  "author": "Danil_Titenko",
+  "license": "ISC",
+  "devDependencies": {
+    "colors": "^1.4.0",
+    "dotenv": "^16.4.1",
+    "nodemon": "^3.0.3"
+  },
+  "dependencies": {
+    "config": "^3.3.10"
+  }
+}
