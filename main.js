@@ -1,8 +1,6 @@
 require('dotenv').config()
+const fileSync = require('./file_sync/fileSync')
 
-const logger = require('./utils/logger')('main');
+fileSync.start()
 
-logger.info('info text message');
-logger.warn('warn text message');
-logger.error('error text message');
 
