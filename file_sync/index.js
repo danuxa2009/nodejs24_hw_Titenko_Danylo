@@ -1,5 +1,5 @@
 
-const { readdir, mkdir, access, readFile, copyFile } = require('fs/promises');
+const { readdir, mkdir, access, copyFile } = require('fs/promises');
 const path = require('path');
 const logger = require('../utils/logger')('fileSync');
 const SOURCE_DIR = '../source'
