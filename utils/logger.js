@@ -19,8 +19,8 @@ if (!existsSync(LOGS_DIRECTORY)) {
   mkdirSync(LOGS_DIRECTORY);
 }
 
-const infoStream = createWriteStream(INFO_LOG_FILE);
-const errorStream = createWriteStream(ERROR_LOG_FILE);
+const infoStream = createWriteStream(INFO_LOG_FILE, { flags: 'a' });
+const errorStream = createWriteStream(ERROR_LOG_FILE, { flags: 'a' });
 
 const streams = {
   info: infoStream,
