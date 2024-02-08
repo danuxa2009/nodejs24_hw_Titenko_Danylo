@@ -1,12 +1,19 @@
-const { bgRed, bgGray, bgBrightYellow, disable } = require("colors/safe");
-const { colorsEnabled, logLevel: configLogLevel } = require("config");
+const { bgRed, bgGray, bgBrightYellow, disable: disableColors } = require("colors/safe");
 const { existsSync, createWriteStream, mkdirSync } = require("fs");
 const { join } = require("path");
+
+const { colorsEnabled, logLevel } = require("config");
 const { getCurrentTimestamp } = require("../helpers/getCurrentTimestamp");
+
+const LOG_PRIORITY = ['info', 'warn', 'error'];
 
 const LOGS_DIRECTORY = join(".", "logs");
 const INFO_LOG_FILE = join(LOGS_DIRECTORY, "info.log");
 const ERROR_LOG_FILE = join(LOGS_DIRECTORY, "errors.log");
+
+if (!colorsEnabled) {
+  disableColors();
+}
 
 if (!existsSync(LOGS_DIRECTORY)) {
   mkdirSync(LOGS_DIRECTORY);
@@ -15,36 +22,38 @@ if (!existsSync(LOGS_DIRECTORY)) {
 const infoStream = createWriteStream(INFO_LOG_FILE);
 const errorStream = createWriteStream(ERROR_LOG_FILE);
 
+const streams = {
+  info: infoStream,
+  warn: errorStream,
+  error: errorStream,
+}
+
 const logger = (moduleName) => {
-  const logLevel = configLogLevel || "warn";
-  const disableMethod = () => {};
-  const infoMethod = logLevel === "info" ? console.info : disableMethod;
-  const warnMethod = ["info", "warn"].includes(logLevel) ? console.warn : disableMethod;
-
-  if (!colorsEnabled) {
-    disable();
-  }
-
   const writeLogsToFile = (consoleType, ...consoleMessages) => {
     const timestamp = getCurrentTimestamp();
     const message = `${timestamp} - ${consoleType.toUpperCase()}: ${consoleMessages.join(" ")}\n`;
 
-    if (consoleType === "info") {
-      infoStream.write(message);
-    } else {
-      errorStream.write(message);
-    }
+    streams[consoleType].write(message);
   };
 
-  const handleLogMethod = (consoleType, logFn, consoleStyles, ...consoleMessages) => {
+  /**
+   * @param {'info' | 'warn' | 'error'} consoleType
+   * @param {string} styledtext
+   * @param  {...any} consoleMessages
+   */
+  const handleLogMethod = (consoleType, styledtext, ...consoleMessages) => {
+    const shouldLogToConsole = LOG_PRIORITY.indexOf(consoleType) >= LOG_PRIORITY.indexOf(logLevel);
+    if (shouldLogToConsole) {
+      console[consoleType](styledtext, ...consoleMessages);
+    }
+
     writeLogsToFile(consoleType, ...consoleMessages);
-    logFn(consoleStyles, ...consoleMessages);
   };
 
   return {
-    info: (...args) => handleLogMethod("info", infoMethod, `${bgGray(moduleName)}:`, ...args),
-    warn: (...args) => handleLogMethod("warn", warnMethod, `${bgBrightYellow.italic(moduleName)}:`, ...args),
-    error: (...args) => handleLogMethod("error", console.error, `${bgRed.bold(moduleName)}:`, ...args),
+    info: (...args) => handleLogMethod("info", `${bgGray(moduleName)}:`, ...args),
+    warn: (...args) => handleLogMethod("warn", `${bgBrightYellow.italic(moduleName)}:`, ...args),
+    error: (...args) => handleLogMethod("error", `${bgRed.bold(moduleName)}:`, ...args),
   };
 };
 
