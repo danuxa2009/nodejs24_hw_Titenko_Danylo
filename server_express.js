@@ -1,40 +1,30 @@
 require("dotenv").config();
-const path = require("path");
-const express = require("express");
 const morgan = require("morgan");
-const rfs = require("rotating-file-stream");
+const express = require("express");
 const logger = require("./utils/logger")("server_express");
 const { port } = require("./config/default");
 const { router: userRouter } = require("./routes/users");
-const { BAD_REQUEST } = require("./constants/statusCodes");
+const { saveUsersToDB } = require("./utils/storageService");
+const { rotateErrorLogs, rotateInfoLogs, LOG_TEMPLATE } = require("./middleware/rotateLogs/morganLogs");
+
 const srv = express();
+const jsonBodyParser = express.json();
 
-const LOG_TEMPLATE = "[:method]: :url - :status";
-const isRequestWithIssue = (res) => res.statusCode < BAD_REQUEST;
+srv.use(jsonBodyParser);
+srv.use(rotateErrorLogs);
+srv.use(rotateInfoLogs);
 
-const errorsLogStream = rfs.createStream("server_errors.log", {
-  interval: "30m",
-  path: path.join(__dirname, "logs"),
-});
-
-const infoLogStream = rfs.createStream("server_info.log", {
-  interval: "30m",
-  path: path.join(__dirname, "logs"),
-});
-
-srv.use(
-  morgan(LOG_TEMPLATE, {
-    skip: (req, res) => isRequestWithIssue(res),
-    stream: errorsLogStream,
-  })
-);
-srv.use(
-  morgan(LOG_TEMPLATE, {
-    skip: (req, res) => !isRequestWithIssue(res),
-    stream: infoLogStream,
-  })
-);
 srv.use(morgan(LOG_TEMPLATE));
 srv.use("/users", userRouter);
+
+process.on("beforeExit", () => {
+  saveUsersToDB();
+  process.exit();
+});
+
+process.on("SIGINT", () => {
+  saveUsersToDB();
+  process.exit();
+});
 
 srv.listen(port, () => logger.info(`Server waiting on ${port} port`));
