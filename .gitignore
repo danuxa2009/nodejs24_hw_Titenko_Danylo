@@ -125,6 +125,9 @@ dist
 # VSCode configuration
 .vscode
 
+#DB
+dev.sqlite3
+
 # yarn v2
 .yarn/cache
 .yarn/unplugged
