@@ -18,9 +18,18 @@ const deleteUserById = (id) => {
   storage.splice(userIndex, 1);
 };
 
+process.on("beforeExit", () => {
+  saveUsersToDB();
+  process.exit();
+});
+
+process.on("SIGINT", () => {
+  saveUsersToDB();
+  process.exit();
+});
+
 module.exports = {
   storage,
-  saveUsersToDB,
   findUserById,
   deleteUserById,
 };
